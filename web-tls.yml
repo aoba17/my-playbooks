@@ -1,18 +1,54 @@
 - name: Configure webserver with nginx
   hosts: webservers
+  vars:
+    vagrant_home: /home/vagrant
+    dmm_home: "{{vagrant_home}}/dmm-gacha"
   become: True
   tasks:
-    - name: install nginx
-      apt: name=nginx update_cache=yes
+    - name: install apt packages
+      apt:
+        pkg:
+          - git
+          - openjdk-8-jdk
+          - nginx
+          - supervisor
+        update_cache: yes
+        cache_valid_time: 3600        
+
+    - name: create project directory
+      file: path={{dmm_home}} state=directory
+
+    - name: copy dmm-gacha jar
+      copy:
+        src: "/Users/Takafumi/dev/project/dmm-gacha/target/dmm-gacha.jar"
+        dest: "{{dmm_home}}/dmm-gacha.jar"m
+        mode: "0755"
+
+    - name: set the supervisor
+      template:
+        src: "templates/supervisor.conf.j2"
+        dest: "/etc/supervisor/conf.d/dmm-gacha.conf"
+      notify: restart supervisor
 
     - name: copy nginx config file
-      copy: src=../files/nginx.conf dest=/etc/nginx/sites-available/default
+      template:
+        src: "templates/nginx.conf.j2"
+        dest: "/etc/nginx/sites-available/default"
+      notify: restart nginx
 
     - name: enable configuration
-      file: dest=/etc/nginx/sites-enabled/default src=/etc/nginx/sites-available/default state=link
+      file:
+        dest: "/etc/nginx/sites-enabled/default"
+        src: "/etc/nginx/sites-available/default"
+        state: link
+      notify: restart nginx
 
-    - name: copy index.html
-      template: src=templates/index.html.j2 dest=/usr/share/nginx/html/index.html
+    # - name: copy index.html
+    #   template: src=templates/index.html.j2 dest=/usr/share/nginx/html/index.html
+
+  handlers:
+    - name: restart supervisor
+      supervisorctl: name=dmm-gacha state=restarted
 
     - name: restart nginx
       service: name=nginx state=restarted
