@@ -21,7 +21,7 @@
     - name: copy dmm-gacha jar
       copy:
         src: "/Users/Takafumi/dev/project/dmm-gacha/target/dmm-gacha.jar"
-        dest: "{{dmm_home}}/dmm-gacha.jar"m
+        dest: "{{dmm_home}}/dmm-gacha.jar"
         mode: "0755"
 
     - name: set the supervisor
