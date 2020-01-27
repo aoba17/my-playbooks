@@ -1,5 +1,7 @@
 - name: Configure webserver with nginx
   hosts: webservers
+  vars_files:
+    - secrets.yml
   vars:
     vagrant_home: /home/vagrant
     dmm_home: "{{vagrant_home}}/dmm-gacha"
@@ -42,9 +44,6 @@
         src: "/etc/nginx/sites-available/default"
         state: link
       notify: restart nginx
-
-    # - name: copy index.html
-    #   template: src=templates/index.html.j2 dest=/usr/share/nginx/html/index.html
 
   handlers:
     - name: restart supervisor
