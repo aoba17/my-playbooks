@@ -1,5 +1,20 @@
+- name: build jar
+  hosts: 127.0.0.1
+  connection: local
+  tasks:
+    - name: lein clean
+      command: /usr/local/bin/lein clean
+      args:
+        chdir: /Users/Takafumi/dev/project/dmm-gacha
+    - name: build jar file
+      command: /usr/local/bin/lein with-profile prod uberjar
+      args:
+        chdir: /Users/Takafumi/dev/project/dmm-gacha
+
 - name: Configure webserver with nginx
-  hosts: webservers
+  hosts:
+    - webservers
+    - tag_type_web
   vars_files:
     - secrets.yml
   vars:
@@ -25,29 +40,32 @@
         src: "/Users/Takafumi/dev/project/dmm-gacha/target/dmm-gacha.jar"
         dest: "{{dmm_home}}/dmm-gacha.jar"
         mode: "0755"
+      notify: "restart web server"
 
     - name: set the supervisor
       template:
         src: "templates/supervisor.conf.j2"
         dest: "/etc/supervisor/conf.d/dmm-gacha.conf"
-      notify: restart supervisor
+      notify: "restart web server"
 
     - name: copy nginx config file
       template:
         src: "templates/nginx.conf.j2"
         dest: "/etc/nginx/sites-available/default"
-      notify: restart nginx
+      notify: "restart web server"
 
     - name: enable configuration
       file:
         dest: "/etc/nginx/sites-enabled/default"
         src: "/etc/nginx/sites-available/default"
         state: link
-      notify: restart nginx
+      notify: "restart web server"
 
   handlers:
-    - name: restart supervisor
+    - name: restart web app
       supervisorctl: name=dmm-gacha state=restarted
+      listen: "restart web server"
 
     - name: restart nginx
       service: name=nginx state=restarted
+      listen: "restart web server"
