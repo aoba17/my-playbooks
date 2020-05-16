@@ -1,0 +1,13 @@
+- name: Initialize postgres
+  hosts:
+    - webservers
+  vars_files:
+    - secrets.yml
+  become: True
+  tasks:
+    - name: install postgresql
+      apt:
+        pkg:
+          - postgresql
+          - postgresql-contrib
+          - python-psycopg2

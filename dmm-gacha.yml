@@ -25,7 +25,6 @@
     - name: install apt packages
       apt:
         pkg:
-          - git
           - openjdk-8-jdk
           - nginx
           - supervisor

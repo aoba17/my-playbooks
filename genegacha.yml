@@ -1,0 +1,22 @@
+- name: Deploy genegacha
+  hosts:
+    - webservers
+  vars_files:
+    - secrets.yml
+  vars:
+    genegacha_home: /home/vagrant/genegacha
+  become: True
+  tasks:
+    - name: install apt packages
+      apt:
+        pkg:
+          - openjdk-8-jdk
+          - nginx
+          - nodejs
+          - npm
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: create project directory
+      file: path={{genegacha_home}} state=directory
+    
