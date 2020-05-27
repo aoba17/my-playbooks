@@ -16,7 +16,7 @@
     - webservers
     - tag_type_web
   vars_files:
-    - secrets.yml
+    - dmm_secrets.yml
   vars:
     vagrant_home: /home/vagrant
     dmm_home: "{{vagrant_home}}/dmm-gacha"

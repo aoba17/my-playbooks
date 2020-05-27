@@ -2,7 +2,7 @@
   hosts:
     - webservers
   vars_files:
-    - secrets.yml
+    - genegacha_secrets.yml
   vars:
     genegacha_home: /home/vagrant/genegacha
   become: True
