@@ -5,11 +5,11 @@
     - name: lein clean
       command: /usr/local/bin/lein clean
       args:
-        chdir: /Users/Takafumi/dev/project/dmm-gacha
+        chdir: {{ local_home }}
     - name: build jar file
       command: /usr/local/bin/lein with-profile prod uberjar
       args:
-        chdir: /Users/Takafumi/dev/project/dmm-gacha
+        chdir: {{ local_home }}
 
 - name: Configure webserver with nginx
   hosts:
@@ -17,9 +17,6 @@
     - tag_type_web
   vars_files:
     - dmm_secrets.yml
-  vars:
-    vagrant_home: /home/vagrant
-    dmm_home: "{{vagrant_home}}/dmm-gacha"
   become: True
   tasks:
     - name: install apt packages
@@ -32,31 +29,31 @@
         cache_valid_time: 3600        
 
     - name: create project directory
-      file: path={{dmm_home}} state=directory
+      file: path={{ home_dir }} state=directory
 
     - name: copy dmm-gacha jar
       copy:
-        src: "/Users/Takafumi/dev/project/dmm-gacha/target/dmm-gacha.jar"
-        dest: "{{dmm_home}}/dmm-gacha.jar"
+        src: "{{ local_home }}/target/{{ artifact }}"
+        dest: "{{ home_dir }}/{{ artifact }}"
         mode: "0755"
       notify: "restart web server"
 
     - name: set the supervisor
       template:
         src: "templates/supervisor.conf.j2"
-        dest: "/etc/supervisor/conf.d/dmm-gacha.conf"
+        dest: "/etc/supervisor/conf.d/{{ conf_file }}"
       notify: "restart web server"
 
     - name: copy nginx config file
       template:
         src: "templates/nginx.conf.j2"
-        dest: "/etc/nginx/sites-available/default"
+        dest: "/etc/nginx/sites-available/{{ conf_file }}"
       notify: "restart web server"
 
     - name: enable configuration
       file:
-        dest: "/etc/nginx/sites-enabled/default"
-        src: "/etc/nginx/sites-available/default"
+        dest: "/etc/nginx/sites-enabled/{{ conf_file }}"
+        src: "/etc/nginx/sites-available/{{ conf_file }}"
         state: link
       notify: "restart web server"
 

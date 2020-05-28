@@ -1,6 +1,6 @@
 [program:dmm-gacha]
-command=java -jar dmm-gacha.jar
-directory= {{dmm_home}}
+command=java -jar {{ artifact }}
+directory= {{ home_dir }}
 user=root
 autostart=true
 autorestart=true
