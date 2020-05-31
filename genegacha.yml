@@ -1,17 +1,22 @@
 - name: build jar
-  hosts: 127:0.0.1
+  hosts: 127.0.0.1
   connection: local
   vars_files:
     genegacha_secrets.yml
   tasks:
+    - name: clean target directory
+      command: /usr/local/bin/lein clean
+      args:
+        chdir: "{{ local_home }}"
     - name: production build
       command: /usr/local/bin/lein prod
       args:
-        chdir: {{ local_home }}
+        chdir: "{{ local_home }}"
 
 - name: Deploy genegacha
   hosts:
     - webservers
+    - tag_type_web
   vars_files:
     - genegacha_secrets.yml
   become: True
@@ -24,12 +29,12 @@
         cache_valid_time: 3600
 
     - name: create project directory
-      file: path={{ home_dir }} state=directory
+      file: path="{{ home_dir }}" state=directory
 
     - name: copy build files
       copy:
         src: "{{ local_home }}/resources/public/"
-        dest: {{ home_dir }}
+        dest: "{{ home_dir }}"
         mode: "0755"
 
     - name: copy nginx config file
@@ -40,7 +45,7 @@
 
     - name: enable configuration
       file:
-        dest: "etc/nginx/sites-enabled/{{ nginx_file }}"
+        dest: "/etc/nginx/sites-enabled/{{ nginx_file }}"
         src: "/etc/nginx/sites-available/{{ nginx_file }}"
         state: link
       notify: "restart nginx"

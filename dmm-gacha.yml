@@ -1,15 +1,17 @@
 - name: build jar
   hosts: 127.0.0.1
+  vars_files:
+    - dmm_secrets.yml
   connection: local
   tasks:
     - name: lein clean
       command: /usr/local/bin/lein clean
       args:
-        chdir: {{ local_home }}
+        chdir: "{{ local_home }}"
     - name: build jar file
       command: /usr/local/bin/lein with-profile prod uberjar
       args:
-        chdir: {{ local_home }}
+        chdir: "{{ local_home }}"
 
 - name: Configure webserver with nginx
   hosts:
@@ -29,7 +31,7 @@
         cache_valid_time: 3600        
 
     - name: create project directory
-      file: path={{ home_dir }} state=directory
+      file: path="{{ home_dir }}" state=directory
 
     - name: copy dmm-gacha jar
       copy:
