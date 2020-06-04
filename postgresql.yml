@@ -1,13 +1,56 @@
+- name: Dump a database on local
+  hosts: 127.0.0.1
+  connection: local
+  tasks:
+    - name: create a dump file
+      postgresql_db:
+        name: "{{ db_name }}"
+        state: dump
+        target: "{{ local_dump }}"
+
 - name: Initialize postgres
   hosts:
     - webservers
   vars_files:
-    - secrets.yml
+    - hpdb_secrets.yml
   become: True
   tasks:
-    - name: install postgresql
+    - name: Install packages upon which following tasks depends
       apt:
         pkg:
-          - postgresql
-          - postgresql-contrib
+          - gpg
+          - python-apt
           - python-psycopg2
+        update_cache: yes
+    - name: Add a apt key of postgresql-12
+      apt_key:
+        url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+        state: present
+    - name: Add postgres-12 repository
+      apt_repository:
+        repo: deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main
+        state: present
+    - name: Install postgresql
+      apt:
+        pkg:
+          - postgresql-12
+          - postgresql-contrib
+        update_cache: yes
+    - name: Create a new database
+      postgresql_db:
+        name: "{{ db_name }}"
+    - name: Create a user
+      postgresql_user:
+        db: "{{ db_name }}"
+        name: "{{ db_user }}"
+        password: "{{ db_user_password }}"
+        expires: infinity
+    - name: Copy the dump file.
+      copy:
+        src: "{{ local_dump }}"
+        dest: "{{ dump_dest }}"
+    - name: Restore the database
+      postgresql_db:
+        name: "{{ db_name }}"
+        state: restore
+        target: "{{ dump_dest }}"

@@ -1,0 +1,12 @@
+- name: production build
+  hosts: 127.0.0.1
+  connection: local
+  tasks:
+    - name: clean the leiningen project
+      command: /usr/local/bin/lein clean
+      args:
+        chdir: "{{ local_home }}"
+    - name: build the leiningen project
+      command: /usr/local/bin/lein "{{ build_option }}"
+      args:
+        chdir: "{{ local_home }}"
