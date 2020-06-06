@@ -1,17 +1,9 @@
-- name: build jar
-  hosts: 127.0.0.1
+- hosts: 127.0.0.1
+  connection: local
   vars_files:
     - dmm_secrets.yml
-  connection: local
-  tasks:
-    - name: lein clean
-      command: /usr/local/bin/lein clean
-      args:
-        chdir: "{{ local_home }}"
-    - name: build jar file
-      command: /usr/local/bin/lein with-profile prod uberjar
-      args:
-        chdir: "{{ local_home }}"
+  roles:
+    - role: lein_build 
 
 - name: Configure webserver with nginx
   hosts:
