@@ -1,61 +1,17 @@
-- hosts: 127.0.0.1
+- name: Build dmm-gacha
+  hosts: 127.0.0.1
   connection: local
   vars_files:
     - dmm_secrets.yml
   roles:
     - role: lein_build 
 
-- name: Configure webserver with nginx
+- name: Deploy dmm-gacha
   hosts:
     - webservers
     - tag_type_web
   vars_files:
     - dmm_secrets.yml
   become: True
-  tasks:
-    - name: install apt packages
-      apt:
-        pkg:
-          - openjdk-8-jdk
-          - nginx
-          - supervisor
-        update_cache: yes
-        cache_valid_time: 3600        
-
-    - name: create project directory
-      file: path="{{ home_dir }}" state=directory
-
-    - name: copy dmm-gacha jar
-      copy:
-        src: "{{ local_home }}/target/{{ artifact }}"
-        dest: "{{ home_dir }}/{{ artifact }}"
-        mode: "0755"
-      notify: "restart web server"
-
-    - name: set the supervisor
-      template:
-        src: "templates/supervisor.conf.j2"
-        dest: "/etc/supervisor/conf.d/{{ conf_file }}"
-      notify: "restart web server"
-
-    - name: copy nginx config file
-      template:
-        src: "templates/nginx.conf.j2"
-        dest: "/etc/nginx/sites-available/{{ conf_file }}"
-      notify: "restart web server"
-
-    - name: enable configuration
-      file:
-        dest: "/etc/nginx/sites-enabled/{{ conf_file }}"
-        src: "/etc/nginx/sites-available/{{ conf_file }}"
-        state: link
-      notify: "restart web server"
-
-  handlers:
-    - name: restart web app
-      supervisorctl: name=dmm-gacha state=restarted
-      listen: "restart web server"
-
-    - name: restart nginx
-      service: name=nginx state=restarted
-      listen: "restart web server"
+  roles:
+    - role: deploy_jar

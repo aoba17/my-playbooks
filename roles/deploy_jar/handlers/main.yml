@@ -1,0 +1,6 @@
+- name: restart web app
+  supervisorctl: name=dmm-gacha state=restarted
+  listen: "restart web server"
+- name: restart nginx
+  service: name=nginx state=restarted
+  listen: "restart web server"

@@ -1,0 +1,24 @@
+- name: install apt packages
+  apt:
+    pkg:
+      - nginx
+    update_cache: yes
+    cache_valid_time: 3600
+- name: create project directory
+  file: path="{{ home_dir }}" state=directory
+- name: copy build files
+  copy:
+    src: "{{ local_home }}/resources/public/"
+    dest: "{{ home_dir }}"
+    mode: "0755"
+- name: copy nginx config file
+  template:
+    src: "nginx.conf.j2"
+    dest: "/etc/nginx/sites-available/{{ nginx_file }}"
+  notify: "restart nginx"
+- name: enable configuration
+  file:
+    dest: "/etc/nginx/sites-enabled/{{ nginx_file }}"
+    src: "/etc/nginx/sites-available/{{ nginx_file }}"
+    state: link
+  notify: "restart nginx"
