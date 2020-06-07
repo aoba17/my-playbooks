@@ -3,13 +3,8 @@
   connection: local
   vars_files:
     - hpdb_secrets.yml
-  tasks:
-    - name: create a dump file
-      postgresql_db:
-        name: "{{ db_name }}"
-        login_user: "{{ db_user }}"
-        state: dump
-        target: "{{ local_dump }}"
+  roles:
+    - role: dump_postgres
 
 - name: Initialize postgres
   hosts:
@@ -17,71 +12,5 @@
   vars_files:
     - hpdb_secrets.yml
   become: True
-  tasks:
-    - name: Install packages upon which following tasks depends
-      apt:
-        pkg:
-          - gpg
-          - python-pip
-          - python-apt
-        update_cache: yes
-    - name: Install pip packages upon which following tasks depends
-      pip:
-        name:
-          - psycopg2
-    - name: Add a apt key of postgresql-12
-      apt_key:
-        url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
-        state: present
-    - name: Add postgres-12 repository
-      apt_repository:
-        repo: deb http://apt.postgresql.org/pub/repos/apt/ bionic-pgdg main
-        state: present
-    - name: Install postgresql
-      apt:
-        pkg:
-          - postgresql-12
-          - postgresql-contrib
-        update_cache: yes
-    - name: Set the postgres user's password
-      user:
-        name: postgres
-        password: "{{ postgres_password }}"
-    - name: Enable login as postgres without password
-      postgresql_pg_hba:
-        dest: /etc/postgresql/12/main/pg_hba.conf
-        contype: local
-        users: postgres
-        method: peer
-    - name: Enable login as postgres without password
-      postgresql_pg_hba:
-        dest: /etc/postgresql/12/main/pg_hba.conf
-        contype: local
-        users: "{{ db_user }}"
-        method: md5
-    - name: Ensure the PostgreSQL service is running
-      service: name=postgresql state=restarted enabled=yes
-    - name: Create a new database
-      become: yes
-      become_user: postgres
-      postgresql_db:
-        name: "{{ db_name }}"
-    - name: Create a user
-      become: yes
-      become_user: postgres
-      postgresql_user:
-        db: "{{ db_name }}"
-        name: "{{ db_user }}"
-        password: "{{ db_user_password }}"
-        expires: infinity
-    - name: Copy the dump file.
-      copy:
-        src: "{{ local_dump }}"
-        dest: "{{ dump_dest }}"
-    - name: Restore the database
-      become: yes
-      become_user: postgres
-      postgresql_db:
-        name: "{{ db_name }}"
-        state: restore
-        target: "{{ dump_dest }}"
+  roles:
+    - role: init_postgres

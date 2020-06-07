@@ -1,0 +1,6 @@
+- name: create a dump file
+  postgresql_db:
+    name: "{{ db_name }}"
+    login_user: "{{ db_user }}"
+    state: dump
+    target: "{{ local_dump }}"
